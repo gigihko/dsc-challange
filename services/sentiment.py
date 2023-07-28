@@ -7,6 +7,9 @@ from fastapi import status
 from fastapi.responses import PlainTextResponse
 from fastapi.responses import Response
 import sqlite3
+import pandas as pd
+from services.database import input_database
+
 
 pretrained = "ayameRushia/bert-base-indonesian-1.5G-sentiment-analysis-smsa"
 model = AutoModelForSequenceClassification.from_pretrained(pretrained)
@@ -22,47 +25,53 @@ async def insert_db(df):
     conn.close()
 
 
-async def get_sentiment(input):
-    try:
-        result = await cleansing(input)
-        result = result['data']
-        sentiment = classifier(result)
-        content = {
-            "ok": True,
-            "code": status.HTTP_200_OK,
-            "data": sentiment,
-            "message": "Success",
-        }
-        return content
-    except Exception as e:
-        return e
+async def get_sentiment(text):
+    result = await cleansing(text)
+    result = result['data']
+    sentiment = classifier(result)
+
+    di = {
+        "Tweet" : [text],
+        "Tweets_clean" : [result],
+        "Sentiment" : [sentiment[0]['label']]
+    }
+
+    df = pd.DataFrame.from_dict(di)
+    await input_database(df=df)
+
+    content  = {
+        "ok" : True,
+        "code" : status.HTTP_200_OK,
+        "data" : {
+            "data" : result,
+            "sentiment" : sentiment
+            },
+        "messege" : "Success"
+    }
+
+    return content
+
 
 
 async def get_sentiment_file(df):
-    try:
-        tweets_list = df['Tweet'].tolist()
-        tweets_clean_list = []
-        sentiment_list = []
+    tweets_list = df.iloc[:,0].tolist()
+    tweets_clean_list = []
+    sentiment_list = []
 
-        for tweet in tweets_list:
-            tweet_clean = await cleansing(tweet)
-            tweets_clean_list.append(tweet_clean['data'])
-            sentiment = classifier(tweet_clean['data'])
-            sentiment_list.append(sentiment[0]['label'])
+    for i in tweets_list:
+        tweet_clean = await cleansing(i)
+        result = tweet_clean['data']
+        tweets_clean_list.append(result)
 
-        df['Tweets_clean'] = tweets_clean_list
-        df['Sentiment'] = sentiment_list
+        sentiment = classifier(result)
+        sentiment_list.append(sentiment[0]['label'])
 
-        await insert_db(df=df)
+    df['Tweets_clean'] = tweets_clean_list
+    df['Sentiment'] = sentiment_list
 
-        csv_data = df.to_csv(index=False)
-        response = Response(content=csv_data, media_type="text/csv")
-        response.headers["Content-Disposition"] = "attachment; filename=data.csv"
-        return response
-    except Exception as e:
-        content = {
-            "ok": False,
-            "code": 400,
-            "message": "Failed, data format not allowed !",
-        }
-        return content
+    await input_database(df=df)
+    
+    csv_data = df.to_csv(index=False)
+    response = Response(content = csv_data, media_type="text/csv")
+    response.headers ["Content-Disposition"] = "attachment ; filename=data.csv"
+    return response

@@ -26,5 +26,5 @@ pip install -r requirements.txt
 Run :
 
 ``
-make run
+uvicorn main:app --reload --log-level debug --port 8200
 ``
