@@ -2,14 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from starlette.responses import FileResponse
 import sqlite3 as sql
-# from starlette.templating import Jinja2Templates
 
-# from flask import Flask, render_template, request, redirect, session
-# from fastapi.middleware.wsgi import WSGIMiddleware
-
-# flask_app = Flask(__name__)
-# # Mount Flask on Fastapi
-# app.mount("/home", WSGIMiddleware(flask_app), name="flask")
 app = FastAPI()
 
 @app.get("/")
