@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from starlette.responses import FileResponse
 import sqlite3 as sql
-from starlette.templating import Jinja2Templates
+# from starlette.templating import Jinja2Templates
 
 # from flask import Flask, render_template, request, redirect, session
 # from fastapi.middleware.wsgi import WSGIMiddleware
@@ -43,20 +43,20 @@ async def index():
     
 #     return FileResponse('templates/visualize.html', rows=rows)
 
-templates = Jinja2Templates(directory="templates")
+# templates = Jinja2Templates(directory="templates")
 
-@app.get('/visualize')
-async def render_visualization(request: Request):
-    try:
-        con = sql.connect("tweets.db")
-        con.row_factory = sql.Row
-        cur = con.cursor()
-        cur.execute("SELECT * FROM tweets")
-        rows = cur.fetchall()
-    finally:
-        con.close()
+# @app.get('/visualize')
+# async def render_visualization(request: Request):
+#     try:
+#         con = sql.connect("tweets.db")
+#         con.row_factory = sql.Row
+#         cur = con.cursor()
+#         cur.execute("SELECT * FROM tweets")
+#         rows = cur.fetchall()
+#     finally:
+#         con.close()
 
-    return templates.TemplateResponse("visualize.html", {"request": request, "rows": rows})
+#     return templates.TemplateResponse("visualize.html", {"request": request, "rows": rows})
 
 from routers import cleansing
 from routers import sentiment
